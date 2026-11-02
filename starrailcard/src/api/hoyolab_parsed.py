@@ -64,6 +64,7 @@ convert_id = {
    "24":"ImaginaryAddedRatio",
    "2":"AttackAddedRatio",
    "26":"BaseHP",
+   "71":"ElationDamageAddedRatioBase",
 }
 class AssetHoYoLabParsed:
     def __init__(self, data, propery_info) -> None:
@@ -221,9 +222,11 @@ class AssetHoYoLabParsed:
     
     async def get_attributes_hoyolab(self,properties):
         attributes = []
-        
+
         for key in properties:
             cId = convert_id.get(str(key.property_type))
+            if cId is None or cId not in self.propertie:
+                continue
             if await self.delete_procent(key.base) != 0:
                 attributes.append(
                     {
@@ -235,15 +238,17 @@ class AssetHoYoLabParsed:
                         "percent": True if "%" in key.base else False
                     }
                     )
-            
+
         return attributes
-    
+
     async def get_properties_hoyolab(self, properties):
         additions = []
-        
+
         for key in properties:
             cId = convert_id.get(str(key.property_type))
-            
+            if cId is None or cId not in self.propertie:
+                continue
+
             if await self.delete_procent(key.final) != 0:
                 additions.append(
                     {
@@ -256,14 +261,16 @@ class AssetHoYoLabParsed:
                         "percent": True if "%" in key.final else False
                     }
                     )
-            
+
         return additions
-    
+
     async def get_additions_hoyolab(self, properties):
         additions = []
-        
+
         for key in properties:
             cId = convert_id.get(str(key.property_type))
+            if cId is None or cId not in self.propertie:
+                continue
             if await self.delete_procent(key.add) != 0:
                 additions.append(
                     {"field": self.propertie[cId]["field"],
@@ -274,7 +281,7 @@ class AssetHoYoLabParsed:
                     "percent": True if "%" in key.add else False
                     }
                     )
-            
+
         return additions
     
     async def get_additions(self, attributes, properties):
@@ -432,7 +439,8 @@ class AssetHoYoLabParsed:
         properties = []
         for sub_affix in sub_affix_info:
             cId = convert_id.get(str(sub_affix.property_type))
-
+            if cId is None or cId not in self.propertie:
+                continue
             property = self.propertie[cId]
             
             properties.append(
@@ -457,6 +465,8 @@ class AssetHoYoLabParsed:
             return None
         
         cId = convert_id.get(main_affix_id)
+        if cId is None or cId not in self.propertie:
+            return None
         property = self.propertie[cId]
         
         return {

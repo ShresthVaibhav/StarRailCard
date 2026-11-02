@@ -416,7 +416,8 @@ class Create:
                         bg = await pill.recolor_image(bg.copy(), self.element_color[:3])
                         icon = await pill.recolor_image(icon, (0, 0, 0))
                         bg.alpha_composite(icon, (0,0))
-                self.dop_bg.alpha_composite(bg, position_dop[i])
+                if i < len(position_dop):
+                    self.dop_bg.alpha_composite(bg, position_dop[i])
                 i += 1
             else:
                 icon = await pill.get_download_img(key.icon, size=(43, 43))
@@ -429,6 +430,8 @@ class Create:
                     count = await pill.recolor_image(count.copy(),(189, 144, 252))
                     frame_bg = await pill.recolor_image(frame_bg.copy(),(189, 144, 252))
                 else:
+                    if key.anchor == "Point22":
+                        self.add_main_full = True
                     count = await pill.recolor_image(count.copy(),self.element_color[:3])
                     frame_bg = await pill.recolor_image(frame_bg.copy(),self.element_color[:3])
                 bg.alpha_composite(frame_bg)

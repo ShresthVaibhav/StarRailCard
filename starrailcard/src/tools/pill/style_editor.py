@@ -8,7 +8,6 @@ from .image_control import get_download_img
 from .color_control import  recolor_image, apply_opacity
 
 
-
 async def create_stats(combined_attributes, dop, 
                       font_dop,font,
                       line_size, name_size, max_width, icon_size,
@@ -22,7 +21,14 @@ async def create_stats(combined_attributes, dop,
     
     for i, attribute in enumerate(combined_attributes):
         stat = combined_attributes[attribute]
-        icon = await get_download_img(stat.icon, size= icon_size)
+        if attribute == "elation_dmg":
+            small = (int(icon_size[0] * 0.75), int(icon_size[1] * 0.75))
+            icon_small = await get_download_img(stat.icon, size=small)
+            icon = Image.new("RGBA", icon_size, (0, 0, 0, 0))
+            off = ((icon_size[0] - small[0]) // 2, (icon_size[1] - small[1]) // 2)
+            icon.alpha_composite(icon_small, off)
+        else:
+            icon = await get_download_img(stat.icon, size= icon_size)
         if attribute in ["physical_dmg","fire_dmg","ice_dmg","lightning_dmg","wind_dmg","quantum_dmg", "imaginary_dmg"]:
             icon = await recolor_image(icon.copy(), options.color_element_stat.get(attribute, (255,255,255,255))[:3])
         background = Image.new("RGBA", line_size, (0, 0, 0, 0))
@@ -56,14 +62,19 @@ async def create_stats(combined_attributes, dop,
 async def create_path(character):
     background_path = await options.get_background_path(character.path.id)
     path = treePaths.map_new.get(character.path.id)
-    font_15 = await get_font(15) 
+    if path is None:
+        return background_path
+    font_15 = await get_font(15)
     if character.path.id == "Memory":
         closed = await git.ImageCache().path_closed_mage
     else:
         closed = await git.ImageCache().path_closed_main
 
     for key in character.skill_trees:
-        if key.anchor in ['Point01','Point02','Point03','Point04','Point05','Point19','Point20']:
+        node = path.get(key.anchor)
+        if node is None:
+            continue
+        if key.anchor in ['Point01','Point02','Point03','Point04','Point05','Point19','Point20','Point22']:
             icon = await get_download_img(key.icon, size=(47,47))
             icon = await recolor_image(icon, (255,212,173))
             count = await git.ImageCache().path_count
@@ -75,31 +86,32 @@ async def create_path(character):
             else:
                 if key.max_level > 10:
                     key.level += 2
-                
+
             x = 29 - int(font_15.getlength(f"{key.level}/{key.max_level}")/2)
             d.text((x, 1), f"{key.level}/{key.max_level}", font=font_15, fill = (255,255,255,255))
-            background_path.alpha_composite(icon, path[key.anchor]["icon"])
-            background_path.alpha_composite(count, path[key.anchor]["count"])
+            background_path.alpha_composite(icon, node["icon"])
+            if "count" in node:
+                background_path.alpha_composite(count, node["count"])
         elif key.anchor in ['Point06','Point07','Point08']:
             icon = await get_download_img(key.icon, size=(47,47))
             icon = await recolor_image(icon, (0,0,0))
             if key.level == key.max_level:
-                background_path.alpha_composite(icon, path[key.anchor]["icon"])
+                background_path.alpha_composite(icon, node["icon"])
             else:
                 icon = await apply_opacity(icon, opacity=0.5)
-                
-                background_path.alpha_composite(icon, path[key.anchor]["icon"])
-                background_path.alpha_composite(closed, path[key.anchor]["closed"])
+                background_path.alpha_composite(icon, node["icon"])
+                if "closed" in node:
+                    background_path.alpha_composite(closed, node["closed"])
         else:
             icon = await get_download_img(key.icon, size=(35,35))
             icon = await recolor_image(icon, (0,0,0))
             if key.level == key.max_level:
-                background_path.alpha_composite(icon, path[key.anchor]["icon"])
+                background_path.alpha_composite(icon, node["icon"])
             else:
                 icon = await apply_opacity(icon, opacity=0.5)
                 closed = await git.ImageCache().path_closed_dop
-                background_path.alpha_composite(icon, path[key.anchor]["icon"])
-                background_path.alpha_composite(closed, path[key.anchor]["icon"])
+                background_path.alpha_composite(icon, node["icon"])
+                background_path.alpha_composite(closed, node["icon"])
                 
     return background_path
 

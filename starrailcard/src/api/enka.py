@@ -39,7 +39,6 @@ _INDEX_NAME = [
 ]
 
 
-
 class ApiEnkaNetwork:
     def __init__(self, uid: Union[int, str] = 0, lang: str = "en", parsed: bool = True) -> None:
         self.uid: str = uid
@@ -150,7 +149,10 @@ class ApiEnkaNetwork:
                 if not os.path.exists(PathData.ENKA_INDEX.value / langs):
                     os.makedirs(PathData.ENKA_INDEX.value / langs)
                 await JsonManager(PathData.ENKA_INDEX.value / langs /f"{name}.json").write(data)
-                
+
             print(f"- Updated file: {name}")
-        print("===END UPDATE ASSET===")        
-        
+        print("===END UPDATE ASSET===")
+
+    async def gap_fill_assets(self, lang = None):
+        from .enka_gapfill import gap_fill_assets as _gap_fill
+        return await _gap_fill(lang=lang)

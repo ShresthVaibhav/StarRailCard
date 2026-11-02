@@ -44,13 +44,10 @@ class Create:
         
         charter_profile = charter_profile.copy()
         
-        if not self.img is None:
-            if str(key.id) in self.img:
-                url_id = self.img[str(key.id)]
-            else:
-                url_id = f'https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/icon/avatar/{key.id}.png'
+        if not self.img is None and str(key.id) in self.img:
+            url_id = self.img[str(key.id)]
         else:
-            url_id = f'https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/icon/avatar/{key.id}.png'
+            url_id = key.icon
             
         splash,mask = await asyncio.gather(pill.get_download_img(url_id),_of.maska_character)
         splash = await pill.get_center_size((109,109),splash)

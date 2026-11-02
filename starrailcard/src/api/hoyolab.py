@@ -6,7 +6,19 @@ from ..tools import http, translator, options, ukrainization
 from .error import StarRailCardError
 from .hoyolab_parsed import AssetHoYoLabParsed
 
-    
+from pydantic import ValidationError
+
+
+async def _lenient_characters(client, uid):
+    import genshin
+
+    raw = await client._request_starrail_record("avatar/info", uid, payload={"need_wiki": "true"})
+    for avatar in raw.get("avatar_list", []):
+        for key in ("relics", "ornaments"):
+            avatar[key] = [r for r in avatar.get(key) or [] if r.get("main_property") and "wiki" in r]
+    return genshin.models.StarRailDetailCharacterResponse(**raw)
+
+
 LANG_MAP = {
     "cn": "zh-cn",
     "cht": "zh-tw",
@@ -42,7 +54,6 @@ class HoYoLabApi:
         self.convert_lang = LANG_MAP.get(self.lang)
 
 
-
     async def get(self,cookie: dict, uid: Union[str,int] = 0):
         try:
             import genshin
@@ -54,14 +65,34 @@ class HoYoLabApi:
             if uid == 0:
                 raise StarRailCardError(5, "Specify UID")
             
-        player = await ApiMiHoMo(uid, self.lang).get(parse= False)
-        
         try:
             client = genshin.Client(cookie, game= genshin.Game.STARRAIL, lang= self.convert_lang)
-            data = await client.get_starrail_characters(uid)
+            try:
+                data = await client.get_starrail_characters(uid)
+            except ValidationError:
+                data = await _lenient_characters(client, uid)
+            user = await client.get_starrail_user(uid)
         except Exception as e:
             print(e)
             raise
+
+        player = {"player": {
+            "uid": str(uid),
+            "nickname": user.info.nickname,
+            "level": user.info.level,
+            "world_level": 0,
+            "friend_count": 0,
+            "avatar": {"id": "0", "name": user.info.nickname, "icon": user.info.avatar or user.in_game_avatar or ""},
+            "signature": "",
+            "is_display": True,
+            "space_info": {
+                "avatar_count": user.stats.avatar_num,
+                "achievement_count": user.stats.achievement_num,
+                "memory_data": None,
+                "universe_level": None,
+                "light_cone_count": None,
+            },
+        }}
         data = await AssetHoYoLabParsed(data, data.property_info).collect()
         
         

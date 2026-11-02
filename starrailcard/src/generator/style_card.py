@@ -377,7 +377,6 @@ class Create:
     async def create_skill(self):
         holst_main = Image.new("RGBA", (69, 296), (0, 0, 0, 0))
         holst_dop = Image.new("RGBA", (265, 293), (0, 0, 0, 0))
-        line = Image.new("RGBA", (15, 2), (255, 255, 255, 255))
         holst_point_add = Image.new("RGBA", (145, 68), (0, 0, 0, 0))
         point_add_position = 0
         position_dop = treePaths.tree.get(self.data.path.id)
@@ -429,6 +428,11 @@ class Create:
                         icon_background = await pill.apply_opacity(icon_background, opacity=0.5)
                     holst_dop.alpha_composite(icon_background, treePaths.position_point[key.anchor])
                 else:
+                    if position_dop is None:
+                        continue
+                    pos = position_dop.get(str(key.id)[-2:])
+                    if pos is None:
+                        continue
                     icon_background = await _of.talants_mini_stats
                     icon_background = icon_background.copy()
                     icon = await pill.get_download_img(key.icon, size=(40, 40))
@@ -436,9 +440,11 @@ class Create:
                     icon_background.alpha_composite(icon, (0, 0))
                     if key.level == 0:
                         icon_background = await pill.apply_opacity(icon_background, opacity=0.5)
-                    holst_dop.alpha_composite(icon_background, (222 - position_dop[str(key.id)[-2:]][0],position_dop[str(key.id)[-2:]][1]))
-                    
-                    holst_dop.alpha_composite(line, (266 - position_dop[str(key.id)[-2:]][0], position_dop[str(key.id)[-2:]][1] + 21))
+                    holst_dop.alpha_composite(icon_background, (222 - pos[0], pos[1]))
+
+                    line_w = max(1, pos[0] - 64)
+                    line = Image.new("RGBA", (line_w, 2), (255, 255, 255, 255))
+                    holst_dop.alpha_composite(line, (262 - pos[0], pos[1] + 21))
         
         
         self.stats = Image.new("RGBA", (345, 367), (0, 0, 0, 0))        

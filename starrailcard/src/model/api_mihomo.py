@@ -10,6 +10,12 @@ UA_LANG = False
 MAIN_LINK: Final[str] = "https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/{icon}"
 
 
+def _resolve_link(icon):
+    if icon and str(icon).startswith("http"):
+        return icon
+    return MAIN_LINK.format(icon=icon)
+
+
 def hex_to_rgba(hex_code):
     hex_code = hex_code.strip('#')
     
@@ -301,63 +307,66 @@ class MiHoMoApi(BaseModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.dont_update_link:
-            self.player.avatar.icon = MAIN_LINK.format(icon = self.player.avatar.icon)
+            self.player.avatar.icon = _resolve_link(self.player.avatar.icon)
             for character in self.characters:
-                character.icon = MAIN_LINK.format(icon=character.icon)
-                character.preview = MAIN_LINK.format(icon=character.preview)
-                character.portrait = MAIN_LINK.format(icon=character.portrait)
-                character.rank_icons = [MAIN_LINK.format(icon=icon) for icon in character.rank_icons]
+                character.icon = _resolve_link(character.icon)
+                character.preview = _resolve_link(character.preview)
+                character.portrait = _resolve_link(character.portrait)
+                character.rank_icons = [_resolve_link(icon) for icon in character.rank_icons]
 
                 if character.light_cone:
-                    character.light_cone.icon = MAIN_LINK.format(icon=character.light_cone.icon)
-                    character.light_cone.preview = MAIN_LINK.format(icon=character.light_cone.preview)
-                    character.light_cone.portrait = MAIN_LINK.format(icon=character.light_cone.portrait)
+                    character.light_cone.icon = _resolve_link(character.light_cone.icon)
+                    character.light_cone.preview = _resolve_link(character.light_cone.preview)
+                    character.light_cone.portrait = _resolve_link(character.light_cone.portrait)
 
                 for relic in character.relics:
-                    relic.icon = MAIN_LINK.format(icon=relic.icon)
+                    relic.icon = _resolve_link(relic.icon)
                     for sub_affix in relic.sub_affix:
-                        sub_affix.icon = MAIN_LINK.format(icon=sub_affix.icon)
-                    relic.main_affix.icon = MAIN_LINK.format(icon=relic.main_affix.icon)
+                        sub_affix.icon = _resolve_link(sub_affix.icon)
+                    relic.main_affix.icon = _resolve_link(relic.main_affix.icon)
 
                 for relic_set in character.relic_sets:
-                    relic_set.icon = MAIN_LINK.format(icon=relic_set.icon)
+                    relic_set.icon = _resolve_link(relic_set.icon)
                     for property in relic_set.properties:
-                        property.icon = MAIN_LINK.format(icon=property.icon)
+                        property.icon = _resolve_link(property.icon)
 
                 for skill in character.skills:
                     if skill.icon:
-                        skill.icon = MAIN_LINK.format(icon=skill.icon)
+                        skill.icon = _resolve_link(skill.icon)
 
                 for skill_tree in character.skill_trees:
                     if skill_tree.icon:
-                        skill_tree.icon = MAIN_LINK.format(icon=skill_tree.icon)
+                        skill_tree.icon = _resolve_link(skill_tree.icon)
 
                 for attribute in character.attributes:
-                    attribute.icon = MAIN_LINK.format(icon=attribute.icon)
+                    attribute.icon = _resolve_link(attribute.icon)
 
                 
                 for addition in character.additions:
-                    addition.icon = MAIN_LINK.format(icon=addition.icon)
+                    addition.icon = _resolve_link(addition.icon)
 
                 if character.properties:
                     for property in character.properties:
-                        property.icon = MAIN_LINK.format(icon=property.icon)
+                        property.icon = _resolve_link(property.icon)
 
-                character.element.icon = MAIN_LINK.format(icon = character.element.icon)
+                character.element.icon = _resolve_link(character.element.icon)
 
                 for skills in character.skills:
                     if "icon" in skills:
-                        skills = MAIN_LINK.format(icon = skills)
+                        skills = _resolve_link(skills)
 
-                character.path.icon = MAIN_LINK.format(icon=character.path.icon)
+                character.path.icon = _resolve_link(character.path.icon)
 
                 
                 
                 if not character.light_cone is None:
                     for light_cone_attr in character.light_cone.attributes:
-                        light_cone_attr.icon = MAIN_LINK.format(icon=light_cone_attr.icon)
-                        
+                        light_cone_attr.icon = _resolve_link(light_cone_attr.icon)
+
+                    if character.light_cone.path and character.light_cone.path.icon:
+                        character.light_cone.path.icon = _resolve_link(character.light_cone.path.icon)
+
                     if character.light_cone.properties:
                         for property in character.light_cone.properties:
-                            property.icon = MAIN_LINK.format(icon=property.icon)
+                            property.icon = _resolve_link(property.icon)
 

@@ -316,15 +316,7 @@ class Card:
             StarRail: A class object containing profile information and a profile card
         """
         if self.api_data is None:
-            if self.enka:
-                try:
-                    data = await enka.ApiEnkaNetwork(uid, lang= self.lang).get()
-                except Exception as e:
-                    print(e)
-                    print("To use the EnkaNetwork API you need to download/update the asset\nExample: await enka.ApiEnkaNetwork().update_assets()")
-                    data = await api.ApiMiHoMo(uid, lang= self.lang, force_update = force_update, user_agent= self.user_agent).get()
-            else:
-                data = await api.ApiMiHoMo(uid, lang= self.lang, force_update = force_update, user_agent= self.user_agent).get()
+            data = await enka.ApiEnkaNetwork(uid, lang= self.lang).get()
         else:
             data = self.api_data
             
@@ -378,15 +370,7 @@ class Card:
         """
         
         if self.api_data is None:
-            if self.enka:
-                try:
-                    data = await enka.ApiEnkaNetwork(uid, lang= self.lang).get()
-                except Exception as e:
-                    print(e)
-                    print("To use the EnkaNetwork API you need to download/update the asset")
-                    data = await api.ApiMiHoMo(uid, lang= self.lang, force_update = force_update, user_agent= self.user_agent).get()
-            else:
-                data = await api.ApiMiHoMo(uid, lang= self.lang, force_update = force_update, user_agent= self.user_agent).get()
+            data = await enka.ApiEnkaNetwork(uid, lang= self.lang).get()
         else:
             data = self.api_data
 

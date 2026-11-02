@@ -9,6 +9,7 @@ from PIL import Image
 from io import BytesIO
 from ..git import assets
 from .. import cache, http
+from . import fallback as asset_fallback
 
 _caches = cache.Cache.get_cache()
 _boost_speed = False
@@ -64,6 +65,13 @@ async def get_center_scale(size, file_name):
     return background_image
 
 
+_PLACEHOLDER_SIZE = (256, 256)
+
+
+def _blank_placeholder():
+    return Image.new("RGBA", _PLACEHOLDER_SIZE, (0, 0, 0, 0))
+
+
 async def get_image_from_boost_speed(link):
     path = f"/boost_speed/{link.split('master')[1]}"
     full_path = os.path.join(assets, path.lstrip('/'))
@@ -71,8 +79,12 @@ async def get_image_from_boost_speed(link):
     if os.path.exists(full_path):
         try:
             return Image.open(full_path).convert("RGBA")
-        except Exception as e:
-            raise IOError(f"Error reading image file: {e}")
+        except Exception:
+            try:
+                os.remove(full_path)
+            except OSError:
+                pass
+            return None
     else:
         return None
 
@@ -87,15 +99,15 @@ async def save_image(image, full_path):
     directory = os.path.dirname(full_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
-    
+
     with open(full_path, 'wb') as f:
         f.write(image)
 
 async def open_image(image_data):
     try:
         return Image.open(BytesIO(image_data)).convert("RGBA")
-    except Exception as e:
-        raise TypeError(f"Error Open image: {image_data}")
+    except Exception:
+        return _blank_placeholder()
 
 async def get_download_img(link, size=None, thumbnail_size=None, gif=False):
     cache_key = json.dumps((link, size, thumbnail_size), sort_keys=True)
@@ -118,14 +130,23 @@ async def get_download_img(link, size=None, thumbnail_size=None, gif=False):
             headers_p = {
                 "referer": "https://www.pixiv.net/",
             }
-        image = await download_image(link, headers_p)
+        try:
+            image = await download_image(link, headers_p)
+            Image.open(BytesIO(image))
+            is_valid_image = True
+        except Exception:
+            is_valid_image = False
 
-        if _boost_speed:
+        if _boost_speed and is_valid_image:
             if "StarRailRes" in link:
                 full_path = os.path.join(assets, f"/boost_speed/{link.split('master')[1]}".lstrip('/'))
                 await save_image(image, full_path)
-                      
-        image = await open_image(image)
+
+        if is_valid_image:
+            image = await open_image(image)
+            asset_fallback.remember(link, image)
+        else:
+            image = await asset_fallback.recover(link, download_image, size)
     else:
         image = image_boost
 

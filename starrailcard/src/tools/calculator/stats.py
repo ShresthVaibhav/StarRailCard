@@ -37,7 +37,6 @@ async def get_score(link):
             return data
 
 
-
 def open_score(name):
     with open(_PATH/f"{name}.json", 'r', encoding="utf-8") as file:
         data = json.load(file)
@@ -106,6 +105,12 @@ class Calculator:
 
     async def start(self, hoyo):
         if hoyo:
+            for relic in (self.data.relics or []):
+                self.result["score"][str(relic.id)] = {
+                    "count": 0,
+                    "rolls": {sub.type: sub.count for sub in (relic.sub_affix or [])},
+                    "rank": {"name": "N/A", "color": (255, 255, 255)},
+                }
             return self.result
         
         if not self.data.id in self.score:
